@@ -1,5 +1,3 @@
-import requests
-import tempfile
 from neo4j_connection import Neo4jConnection
 import configparser
 import pandas as pd
