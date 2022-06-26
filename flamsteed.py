@@ -16,12 +16,6 @@ CATALOG_AUTHOR = "Flamsteed, Lalande"
 
 DRY_RUN: bool = False
 
-def init(uri, user, password):
-    conn = Neo4jConnection(uri, user, password)
-    query_string = "MATCH (n) DETACH DELETE n"
-    response = conn.query(query_string)
-    conn.close()
-
 def create_catalog(uri, user, password):
 
     query_string = "MATCH (catalog: CATALOG {name: '$catalog_name'}) WITH COUNT(catalog) > 0 as node_exists RETURN node_exists"
@@ -134,8 +128,6 @@ if __name__ == "__main__":
     uri = config['Database']['uri']
     user = config['Database']['user']
     password = config['Database']['password']
-
-    init(uri, user, password)
 
     create_catalog(uri, user, password)
     import_entries('http://pbarbier.com/flamsteed/flamsteed_l.dat')
