@@ -1,8 +1,11 @@
+from tracemalloc import start
 from neo4j_connection import Neo4jConnection
 import configparser
 import pandas as pd
 from util import get_greek_letter, get_constellation, DMS2deg
 from typing import Dict
+import time
+
 
 EXTERNAL_FILE = "http://pbarbier.com/flamsteed/flamsteed_l.dat"
 
@@ -28,10 +31,10 @@ def create_catalog(uri, user, password):
             node_exists = response[0].get("node_exists")
 
         if node_exists == True:
-            print("Catalog already exists")
+            print("Flamsteed: Catalog already exists")
             return
         else:
-            print("Creating catalog")
+            print("Flamsteed: Creating catalog")
         conn.close()
 
     query_string = "CREATE (c:CATALOG) " \
@@ -44,7 +47,7 @@ def create_catalog(uri, user, password):
 
 def import_entries(file_location: str):
 
-    print("Importing Flamsteed entries")
+    print("Flamsteed: Importing entries")
     for chunk in pd.read_fwf(file_location, chunksize = 100, colspecs=COLSPECS, names=COLUMN_NAMES):
         for row in chunk.itertuples():
             # create data
@@ -116,6 +119,7 @@ def create_relationships(uri, user, password):
 
 if __name__ == "__main__":
 
+    start_time = time.time()
     config = configparser.ConfigParser()
     config.read('app.properties')
 
@@ -129,3 +133,8 @@ if __name__ == "__main__":
 
     create_catalog(uri, user, password)
     import_entries('http://pbarbier.com/flamsteed/flamsteed_l.dat')
+
+    end_time = time.time()
+    total_time = round(end_time - start_time, 3)
+
+    print("Catalog imported in {} seconds".format(total_time))
