@@ -52,6 +52,7 @@ def create_catalog(uri, user, password):
 
 def import_entries(file_location: str):
 
+    print("Importing Flamsteed entries")
     for chunk in pd.read_fwf(file_location, chunksize = 100, colspecs=COLSPECS, names=COLUMN_NAMES):
         for row in chunk.itertuples():
             # create data
@@ -68,14 +69,14 @@ def import_entries(file_location: str):
 
             # create connection to catalog node
             query_string = "MATCH (c:CATALOG), (s: STAR) " \
-                "WHERE c.catalog = 'Flamsteed' and s.catalog = 'Flamsteed' " \
+                "WHERE c.name = 'Flamsteed' and s.full_name = $full_name " \
                 "CREATE (s)-[ce:CATALOG_ENTRY] -> (c) " \
                 "RETURN type(ce)"
             if DRY_RUN == True:
                 print("DRY RUN: {}".format(query_string))
             else:
                 conn = Neo4jConnection(uri, user, password)
-                response = conn.query(query_string)
+                response = conn.query(query_string, parameters={'full_name': entry.get('full_name')})
                 conn.close()
 
 
@@ -88,11 +89,8 @@ def convert_row_to_dict(row):
     if greek_letter != None and constellation != None:
         bayer_name = "{} {}".format(greek_letter, constellation)
 
-    # bayer_name = "{} {}".format(get_greek_letter(str(row.BLet)), get_constellation(str(row.BCon)))
-    # if bayer_name == "None None":
-    #     bayer_name = None
-
     result : Dict = {
+        'catalog': "Flamsteed",
         "full_name": "{} {}".format(str(row.FNum), get_constellation(row.FCon)),
         "name": "{} {}".format(row.FNum, row.FCon),
         "constellation": row.FCon,
@@ -115,6 +113,13 @@ def convert_row_to_dict(row):
 
 
     return result
+
+def create_relationships(uri, user, password):
+    query_string = "MATCH (c:CATALOG), (s:STAR) WHERE s.catalog='Flamsteed' return s"
+    conn = Neo4jConnection(uri, user, password)
+    response = conn.query(query_string)
+    conn.close()
+    pass
 
 
 if __name__ == "__main__":
