@@ -2,14 +2,19 @@ from neo4j_connection import Neo4jConnection
 import pandas as pd
 import numpy as np
 from BaseCatalog import BaseCatalog
+from typing import Dict
+from util import get_constellation, get_greek_letter, HMS2deg, DMS2deg
+import math
 
 class Flamsteed(BaseCatalog):
 
-    def __init__(self, uri=None, user = None, password = None, file_location=None):
+
+
+    def __init__(self, db_uri: str = None, user: str = None, password: str = None, file_location: str=None):
 
         BaseCatalog.__init__(self)
 
-        self.__uri = uri
+        self.__db_uri = db_uri
         self.__user = user
         self.__password = password
         self.__file_location = file_location
@@ -38,29 +43,46 @@ class Flamsteed(BaseCatalog):
 
     def convert_row_to_dict(row):
 
+        bayer_name = "{} {}".format(get_greek_letter(str(row.BLet)), get_constellation(str(row.BCon)))
+        if bayer_name == "None None":
+            bayer_name = None
+
         result = {
+            "full_name": "{} {}".format(str(row.FNum), get_constellation(row.FCon)),
             "name": "{} {}".format(row.FNum, row.FCon),
             "constellation": row.FCon,
             "number": row.FNum,
-            "bayer_const": row.BCon,
-            "bayer_letter": row.BLet,
-            "bayer_index": row.BInd,
-            "ra_dec": {
+            "bayer_name": bayer_name,
+            "bayer_const": row.BCon if bayer_name != None else None,
+            "bayer_letter": row.BLet if bayer_name != None else None,
+            "bayer_index": row.BInd if bayer_name != None else None,  # this still doesn't work
+            "ra": {
                 "epoch": 1690,
                 "ra": str(row.AR_d) + " " + str(row.AR_m) + " " + str(row.AR_s),
-                "dec": str(row.DP_d) + " " + str(row.DP_m) + " " + str(row.DP_s)
+                "ra_deg": DMS2deg(str(row.AR_d) + " " + str(row.AR_m) + " " + str(row.AR_s), scale=4),
+            },
+            "dec": {
+                "epoch": 1690,
+                "dec": str(row.DP_d) + " " + str(row.DP_m) + " " + str(row.DP_s),
+                "dec_deg": DMS2deg(str(row.DP_d) + " " + str(row.DP_m) + " " + str(row.DP_s), scale=4)
             },
             "magnitude": row.Mag
         }
 
-        if result["bayer_letter"] == 'nan':
-            result["bayer_letter"] = None
+        print(type(row.BInd))
+
+        # get rid of nan in bayer_index
+        if result["bayer_index"] != result["bayer_index"]:
+            result["bayer_index"] = None
+
 
         return result
 
+    def write_dict_to_neo4j(input: Dict):
+        pass
+
 
 if __name__ == "__main__":
-    instance = Flamsteed(uri="bolt://localhost:7687", user="neo4j", password="(IJN8uhb", file_location="flamsteed_l.dat")
+    instance = Flamsteed(db_uri="bolt://localhost:7687", user="neo4j", password="(IJN8uhb", file_location="flamsteed_l.dat")
     instance.create_catalog()
     instance.import_entries()
-    print("It's good")

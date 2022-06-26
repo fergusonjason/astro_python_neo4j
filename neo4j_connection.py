@@ -2,8 +2,8 @@ from neo4j import GraphDatabase
 
 class Neo4jConnection:
 
-    def __init__(self, uri, user, password):
-        self.__uri = uri
+    def __init__(self, db_uri: str , user: str, password: str):
+        self.__uri = db_uri
         self.__user = user
         self.__password = password
         self.__driver = None
