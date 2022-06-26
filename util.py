@@ -38,7 +38,7 @@ __CONSTELLATIONS: Dict = {
     "ari": "Arietis",
     "aur": "Aurigae",
     "peg": "Pegasi",
-    "tau": "Tau",
+    "tau": "Tauri",
     "gem": "Geminorum",
     "cnc": "Cancri",
     "leo": "Leonis",
