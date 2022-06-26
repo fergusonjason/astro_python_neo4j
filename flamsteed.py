@@ -25,7 +25,7 @@ def create_catalog(uri, user, password):
     else:
         conn = Neo4jConnection(uri, user, password)
 
-        response = conn.query(query=query_string, parameters = {'catalog_name': "CATALOG_NAME"})
+        response = conn.query(query=query_string, parameters = {'catalog_name': CATALOG_NAME})
         node_exists = None
         if response != None and response[0] != None:
             node_exists = response[0].get("node_exists")
