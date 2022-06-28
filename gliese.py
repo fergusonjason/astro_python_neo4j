@@ -9,6 +9,7 @@ from util import DMS2deg, HMS2deg
 import time
 import pandas as pd
 import configparser
+import numpy as np
 
 COLUMN_NAMES = ['Name','Comp','RAh','RAm', 'RAs','DE_','DEd','DEm','pm','pmPA','RV','Sp','VMag','BV','UB','RI','trplx','e_trplx','plx','e_plx','Mv','HD','DM','Giclas','LHS','OtherName']
 COLSPECS: List[Tuple[int,int]] = [(0,8),(8,10),(12,14),(15,17),(18,20),(21,22),(22,24),(25,29),(30,36),(37,42),(43,49),(54,66),(67,73),(75,80),(82,87),(89,94),
@@ -33,9 +34,9 @@ def create_catalog(uri, user, password):
 
     if catalog_exists == False:
         query_string = "CREATE (c:CATALOG) " \
-            "SET c.name='$catalog_name', c.epoch=1950, c.author='$catalog_author', c.full_name='$catalog_full_name'"
+            "SET c.name='{}', c.epoch=1950, c.author='{}', c.full_name='{}'".format(CATALOG_NAME, CATALOG_AUTHOR, CATALOG_FULL_NAME)
         conn = Neo4jConnection(uri, user, password)
-        result = conn.query(query_string, parameters={'catalog_name': CATALOG_NAME, 'catalog_author': CATALOG_AUTHOR, 'catalog_full_name': CATALOG_FULL_NAME})
+        result = conn.query(query_string)
         conn.close()
     pass
 
@@ -46,33 +47,32 @@ def import_entries(uri: str, user:str, password:str, file_location: str):
             #create dict
             entry = convert_row_to_dict(row)
             #write data to neo4j
-            query_string = "CREATE (s:STAR) set s = $entry return s"
+            query_string = "CREATE (s:STAR) set s = $entry return id(s) as id"
             conn = Neo4jConnection(uri, user, password)
             response = conn.query(query_string, parameters={'entry': entry})
             conn.close()
-            star = None
-            if response != None and response[0] != None:
-                star = response[0]
+            star_id = response[0].get('id')
 
             # create connection
             query_string = "MATCH (c:CATALOG),(s:STAR) " \
-                "WHERE c.name='Gliese' and s.id = $id " \
+                "WHERE c.name = 'Gliese' and id(s) = $id " \
                 "CREATE (s)-[ce:CATALOG_ENTRY] -> (c) " \
-                "return type(ce)"
-            response = conn.query(query_string, parameters={'id': star.get("id")})
+                "return s, c, ce"
+            response = conn.query(query_string, parameters={'id': star_id})
             conn.close()
 
 def convert_row_to_dict(row) -> Dict[str, Any]:
 
     ra = '{} {} {}'.format(str(row.RAh), str(row.RAm), str(row.RAm))
-    ra_dec = HMS2deg(ra)
+    ra_dec = HMS2deg(ra=ra, scale=3)
     dec = "{} {} {}".format(str(row.DEd), str(row.DEm), str('0'))
-    
-    dec_dec = DMS2deg(dec)
+
+    dec_dec = DMS2deg(dec, 3)
 
     result = {
+        'catalog': 'Gliese',
         'name': row.Name,
-        'component': row.Comp,
+        'component': row.Comp if pd.notna(row.Comp) else None,
         'epoch': 1950,
         'ra': ra,
         'ra_dec': ra_dec,
@@ -80,22 +80,22 @@ def convert_row_to_dict(row) -> Dict[str, Any]:
         'dec_dec': dec_dec,
         'proper motion': row.pm,
         'proper motion direction': row.pmPA,
-        'radial velocity': row.RV,
-        'spectral type full': row.Sp, # this needs to be split into components
+        'radial velocity': row.RV if pd.notna(row.RV) else None,
+        'spectral type full': row.Sp if pd.notna(row.Sp) else None, # this needs to be split into components
         'visual magnitude': row.VMag,
         'BV color': row.BV,
         'UB color': row.UB,
         'RI color': row.RI,
-        'trigonometric parallax': row.trplx,
-        'trigonometric parallax error margin': row.e_trplx,
-        'resulting_parallax': row.plx,
-        'resulting_parallax_error_margin': row.e_plx,
+        'trigonometric parallax': row.trplx if pd.notna(row.trplx) else None,
+        'trigonometric parallax error margin': row.e_trplx if pd.notna(row.e_trplx) else None,
+        'resulting_parallax': row.plx if pd.notna(row.plx) else None,
+        'resulting_parallax_error_margin': row.e_plx if pd.notna(row.e_plx) else None,
         'absolute visual magnitude': row.Mv,
-        'HD number': row.HD,
-        'DM number': row.DM,
-        'Giclass': row.Giclass,
-        'LHS': row.LHS,
-        'Other name': row.OtherName
+        'HD number': int(row.HD) if pd.notna(row.HD) else None,
+        'DM number': row.DM if pd.notna(row.DM) else None,
+        'Giclass': row.Giclas if pd.notna(row.Giclas) else None,
+        'LHS': row.LHS if pd.notna(row.LHS) else None,
+        'Other name': row.OtherName if pd.notna(row.OtherName) else None
     }
 
     return result
@@ -122,5 +122,5 @@ if __name__ == '__main__':
     import_entries(uri, user, password, 'https://cdsarc.cds.unistra.fr/ftp/V/70A/catalog.dat.gz')
     end_time = time.time()
     total_time = round(end_time - start_time,3)
-    print("Gliese: catalog importing in {} seconds".format(total_time))
+    print("Gliese: catalog imported in {} seconds".format(total_time))
     pass
