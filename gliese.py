@@ -20,7 +20,6 @@ CATALOG_FULL_NAME = 'Preliminary Version of the Third Catalogue of Nearby Stars'
 CATALOG_AUTHOR = 'Gliese W., Jahreiss H.'
 
 
-
 def create_catalog(uri, user, password):
 
     print("Gliese: Creating catalog")
@@ -38,7 +37,6 @@ def create_catalog(uri, user, password):
         conn = Neo4jConnection(uri, user, password)
         result = conn.query(query_string)
         conn.close()
-    pass
 
 def import_entries(uri: str, user:str, password:str, file_location: str):
     print("Gliese: importing entries")
@@ -123,4 +121,3 @@ if __name__ == '__main__':
     end_time = time.time()
     total_time = round(end_time - start_time,3)
     print("Gliese: catalog imported in {} seconds".format(total_time))
-    pass
