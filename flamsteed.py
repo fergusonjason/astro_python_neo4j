@@ -54,25 +54,23 @@ def import_entries(file_location: str):
             entry = convert_row_to_dict(row);
 
             # write data to neo4j
-            query_string='CREATE (s:STAR) set s = $entry'
-            if DRY_RUN == True:
-                print("DRY RUN: {}".format(entry))
-            else:
-                conn = Neo4jConnection(uri, user, password)
-                response = conn.query(query_string, parameters={'entry': entry})
-                conn.close()
+            query_string='CREATE (s:STAR) set s = $entry return id(s) as id'
+            conn = Neo4jConnection(uri, user, password)
+            response = conn.query(query_string, parameters={'entry': entry})
+            star_id = response[0].get('id')
+            conn.close()
+
 
             # create connection to catalog node
             query_string = "MATCH (c:CATALOG), (s: STAR) " \
-                "WHERE c.name = 'Flamsteed' and s.full_name = $full_name " \
+                "WHERE c.name = 'Flamsteed' and id(s) = $id " \
                 "CREATE (s)-[ce:CATALOG_ENTRY] -> (c) " \
                 "RETURN type(ce)"
-            if DRY_RUN == True:
-                print("DRY RUN: {}".format(query_string))
-            else:
-                conn = Neo4jConnection(uri, user, password)
-                response = conn.query(query_string, parameters={'full_name': entry.get('full_name')})
-                conn.close()
+
+            conn = Neo4jConnection(uri, user, password)
+            response = conn.query(query_string, parameters={'id': star_id})
+            conn.close()
+
 
 
 def convert_row_to_dict(row):
