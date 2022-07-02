@@ -14,3 +14,12 @@ uri = (bolt uri)
 user = neo4j
 password = (password)
 ```
+
+# order to run the scripts
+
+Run the scripts in the following order:
+
+- init.py
+- catalogs.py
+- spectral_types.py
+- (individual catalogs)
