@@ -40,24 +40,34 @@ def create_catalog(uri, user, password):
 
 def import_entries(uri: str, user:str, password:str, file_location: str):
     print("Gliese: importing entries")
-    for chunk in pd.read_fwf(file_location, chunksize = 100, colspecs=COLSPECS, names=COLUMN_NAMES):
-        for row in chunk.itertuples():
-            #create dict
-            entry = convert_row_to_dict(row)
-            #write data to neo4j
-            query_string = "CREATE (s:STAR) set s = $entry return id(s) as id"
-            conn = Neo4jConnection(uri, user, password)
-            response = conn.query(query_string, parameters={'entry': entry})
-            conn.close()
-            star_id = response[0].get('id')
+    for chunk in pd.read_fwf(file_location, chunksize = 1000, colspecs=COLSPECS, names=COLUMN_NAMES):
 
-            # create connection
-            query_string = "MATCH (c:CATALOG),(s:STAR) " \
-                "WHERE c.name = 'Gliese' and id(s) = $id " \
-                "CREATE (s)-[ce:CATALOG_ENTRY] -> (c) " \
-                "return s, c, ce"
-            response = conn.query(query_string, parameters={'id': star_id})
+        batch = []
+        for row in chunk.itertuples():
+            batch.append(convert_row_to_dict(row))
+
+        query_string = "WITH $batch as batch " \
+            "UNWIND batch as item " \
+            "CREATE (s:STAR) SET s += item " \
+            "RETURN id(s) as id"
+        conn = Neo4jConnection(uri, user, password)
+        response = conn.query(query_string, parameters={'batch': batch})
+        conn.close()
+
+        if response != None and response[0] != None:
+            id_list = []
+            for record in response:
+                id_list.append(record.get('id'))
+
+            query_string = "WITH $idlist as id_list " \
+                "UNWIND id_list as item " \
+                "MATCH (c:CATALOG), (s:STAR) " \
+                "WHERE c.name = 'Gliese' and id(s) = item " \
+                "CREATE (s) - [ce:CATALOG_ENTRY] -> (c) " \
+                "RETURN ce"
+            response = conn.query(query_string, parameters={'idlist': id_list})
             conn.close()
+
 
 def convert_row_to_dict(row) -> Dict[str, Any]:
 
