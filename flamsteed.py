@@ -12,66 +12,62 @@ EXTERNAL_FILE = "http://pbarbier.com/flamsteed/flamsteed_l.dat"
 COLUMN_NAMES = ["FNo", "FCon", "FNum","BCon","BLet","BInd","Mag", "AR_d","AR_m","AR_s","DP_d","DP_m","DP_s"]
 COLSPECS = [(0,4),(5,8),(9,12),(34,37),(38,41),(42,43),(100,103),(44,47),(48,50),(51,53),(54,57),(58,60),(61,63)]
 
-CATALOG_NAME = "Flamsteed"
-CATALOG_AUTHOR = "Flamsteed, Lalande"
-
 DRY_RUN: bool = False
 
-def create_catalog(uri, user, password):
+URI = None
+USER = None
+PASSWORD = None
 
-    query_string = "MATCH (catalog: CATALOG {name: '$catalog_name'}) WITH COUNT(catalog) > 0 as node_exists RETURN node_exists"
-    if DRY_RUN == True:
-        print(query_string)
-    else:
-        conn = Neo4jConnection(uri, user, password)
+def do_flamsteed():
 
-        response = conn.query(query=query_string, parameters = {'catalog_name': CATALOG_NAME})
-        node_exists = None
-        if response != None and response[0] != None:
-            node_exists = response[0].get("node_exists")
+    start_time = time.time()
+    config = configparser.ConfigParser()
+    config.read('app.properties')
 
-        if node_exists == True:
-            print("Flamsteed: Catalog already exists")
-            return
-        else:
-            print("Flamsteed: Creating catalog")
-        conn.close()
+    if config == None:
+        print("No config found")
+        quit()
 
-    query_string = "CREATE (c:CATALOG) " \
-        "SET c.name='Flamsteed', c.epoch=1690, c.author='Flamsteed, Lalande'"
-    if DRY_RUN == True:
-        print(query_string)
-    else:
-        response = conn.query(query_string)
-        conn.close()
+    URI = config['Database']['uri']
+    USER = config['Database']['user']
+    PASSWORD = config['Database']['password']
 
-def import_entries(file_location: str):
+    import_entries(file_location='http://pbarbier.com/flamsteed/flamsteed_l.dat', uri= URI, user = USER, password = PASSWORD)
+
+    end_time = time.time()
+    total_time = round(end_time - start_time, 3)
+
+    print("Flamsteed: Catalog imported in {} seconds".format(total_time))
+
+def import_entries(file_location: str, uri: str, user: str, password: str):
 
     print("Flamsteed: Importing entries")
-    for chunk in pd.read_fwf(file_location, chunksize = 100, colspecs=COLSPECS, names=COLUMN_NAMES):
+    for chunk in pd.read_fwf(file_location, chunksize = 1000, colspecs=COLSPECS, names=COLUMN_NAMES):
+        batch = []
         for row in chunk.itertuples():
-            # create data
-            entry = convert_row_to_dict(row);
+            batch.append(convert_row_to_dict(row))
 
-            # write data to neo4j
-            query_string='CREATE (s:STAR) set s = $entry return id(s) as id'
+        query_string = "WITH $batch as batch " \
+            "UNWIND batch as item " \
+            "CREATE (s:STAR) set s += item " \
+            "return id(s) as id "
+        conn = Neo4jConnection(uri, user, password)
+        response = conn.query(query_string, parameters={'batch': batch})
+
+        if response != None:
+
+            id_list = []
+            for record in response:
+                id_list.append(record.get("id"))
+
+            query_string = "WITH $idlist as id_list " \
+                "UNWIND id_list as item " \
+                "MATCH (c:CATALOG), (s:STAR) " \
+                "WHERE c.name = 'Flamsteed' and id(s) = item " \
+                "CREATE (s) - [ce:CATALOG_ENTRY] -> (c) " \
+                "RETURN ce"
             conn = Neo4jConnection(uri, user, password)
-            response = conn.query(query_string, parameters={'entry': entry})
-            star_id = response[0].get('id')
-            conn.close()
-
-
-            # create connection to catalog node
-            query_string = "MATCH (c:CATALOG), (s: STAR) " \
-                "WHERE c.name = 'Flamsteed' and id(s) = $id " \
-                "CREATE (s)-[ce:CATALOG_ENTRY] -> (c) " \
-                "RETURN type(ce)"
-
-            conn = Neo4jConnection(uri, user, password)
-            response = conn.query(query_string, parameters={'id': star_id})
-            conn.close()
-
-
+            response = conn.query(query_string, parameters={'idlist': id_list})
 
 def convert_row_to_dict(row):
 
@@ -107,32 +103,7 @@ def convert_row_to_dict(row):
 
     return result
 
-def create_relationships(uri, user, password):
-    query_string = "MATCH (c:CATALOG), (s:STAR) WHERE s.catalog='Flamsteed' return s"
-    conn = Neo4jConnection(uri, user, password)
-    response = conn.query(query_string)
-    conn.close()
-    pass
-
 
 if __name__ == "__main__":
 
-    start_time = time.time()
-    config = configparser.ConfigParser()
-    config.read('app.properties')
-
-    if config == None:
-        print("No config found")
-        quit()
-
-    uri = config['Database']['uri']
-    user = config['Database']['user']
-    password = config['Database']['password']
-
-    create_catalog(uri, user, password)
-    import_entries('http://pbarbier.com/flamsteed/flamsteed_l.dat')
-
-    end_time = time.time()
-    total_time = round(end_time - start_time, 3)
-
-    print("Catalog imported in {} seconds".format(total_time))
+    do_flamsteed()
