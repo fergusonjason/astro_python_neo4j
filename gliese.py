@@ -11,34 +11,12 @@ import pandas as pd
 import configparser
 import numpy as np
 
-COLUMN_NAMES = ['Name','Comp','RAh','RAm', 'RAs','DE_','DEd','DEm','pm','pmPA','RV','Sp','VMag','BV','UB','RI','trplx','e_trplx','plx','e_plx','Mv','HD','DM','Giclas','LHS','OtherName']
+COLUMN_NAMES: List[str] = ['Name','Comp','RAh','RAm', 'RAs','DE_','DEd','DEm','pm','pmPA','RV','Sp','VMag','BV','UB','RI','trplx','e_trplx','plx','e_plx','Mv','HD','DM','Giclas','LHS','OtherName']
 COLSPECS: List[Tuple[int,int]] = [(0,8),(8,10),(12,14),(15,17),(18,20),(21,22),(22,24),(25,29),(30,36),(37,42),(43,49),(54,66),(67,73),(75,80),(82,87),(89,94),
     (96,102),(102,107),(108,114),(114,119),(121,126),(146,152),(153,165),(168,175),(176,181),(182,187)]
 
-CATALOG_NAME = 'Gliese'
-CATALOG_FULL_NAME = 'Preliminary Version of the Third Catalogue of Nearby Stars'
-CATALOG_AUTHOR = 'Gliese W., Jahreiss H.'
-
-
-def create_catalog(uri, user, password):
-
-    print("Gliese: Creating catalog")
-    query_string = "MATCH (catalog: CATALOG {name: '$catalog_name'}) WITH COUNT(catalog) > 0 as node_exists RETURN node_exists"
-    conn = Neo4jConnection(uri, user, password)
-    result = conn.query(query_string)
-    conn.close()
-    catalog_exists = False
-    if result != None and result[0] != None:
-        catalog_exists = result[0].get("node_exists")
-
-    if catalog_exists == False:
-        query_string = "CREATE (c:CATALOG) " \
-            "SET c.name='{}', c.epoch=1950, c.author='{}', c.full_name='{}'".format(CATALOG_NAME, CATALOG_AUTHOR, CATALOG_FULL_NAME)
-        conn = Neo4jConnection(uri, user, password)
-        result = conn.query(query_string)
-        conn.close()
-
 def import_entries(uri: str, user:str, password:str, file_location: str):
+
     print("Gliese: importing entries")
     for chunk in pd.read_fwf(file_location, chunksize = 1000, colspecs=COLSPECS, names=COLUMN_NAMES):
 
@@ -108,11 +86,7 @@ def convert_row_to_dict(row) -> Dict[str, Any]:
 
     return result
 
-if __name__ == '__main__':
-    if len(COLUMN_NAMES) != len(COLSPECS):
-        print("length of column name {} does not match length of colspecs {}".format(len(COLUMN_NAMES), len(COLSPECS)))
-        quit()
-
+def do_gliese():
     start_time = time.time()
 
     config = configparser.ConfigParser()
@@ -126,8 +100,10 @@ if __name__ == '__main__':
     user = config['Database']['user']
     password = config['Database']['password']
 
-    create_catalog(uri, user, password)
     import_entries(uri, user, password, 'https://cdsarc.cds.unistra.fr/ftp/V/70A/catalog.dat.gz')
     end_time = time.time()
     total_time = round(end_time - start_time,3)
     print("Gliese: catalog imported in {} seconds".format(total_time))
+
+if __name__ == '__main__':
+    do_gliese()
