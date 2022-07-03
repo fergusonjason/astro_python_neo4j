@@ -13,8 +13,6 @@ from neo4j_connection import Neo4jConnection
 from util import get_greek_letter, get_constellation, DMS2deg
 from config.config import URI, USER, PASSWORD
 
-
-
 EXTERNAL_FILE = "http://pbarbier.com/flamsteed/flamsteed_l.dat"
 
 COLUMN_NAMES = ["FNo", "FCon", "FNum","BCon","BLet","BInd","Mag", "AR_d","AR_m","AR_s","DP_d","DP_m","DP_s"]
