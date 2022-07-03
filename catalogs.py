@@ -1,32 +1,28 @@
-from neo4j_connection import Neo4jConnection
+# from catalogs.neo4j_connection.neo4j_connection import Neo4jConnection
 import time
 from typing import Dict
-import configparser
+import os, sys, inspect
 
-URI = ""
-USER = ""
-PASSWORD = ""
+# python rediculousness
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
+from neo4j_connection import Neo4jConnection
+from config.config import URI, USER, PASSWORD
 
 def do_catalogs():
 
     start_time = time.time()
     print('Creating catalogs')
 
-    config = configparser.ConfigParser()
-    config.read('app.properties')
-
-    if config == None:
-        print("No config found")
-        quit()
-
-    URI = config['Database']['uri']
-    USER = config['Database']['user']
-    PASSWORD = config['Database']['password']
 
     # create individual catalogs
+    # TODO: convert this to calling a List of functions
     catalogs = []
     catalogs.append(create_gliese_dict())
     catalogs.append(create_flamsteed_dict())
+    catalogs.append(create_hd_dict())
 
     # write catalog nodes
     query_string = "WITH $catalogs as catalogs " \
@@ -68,10 +64,13 @@ def create_gliese_dict() -> Dict[str, str]:
         'catalog author': 'Gliese W., Jahreiss H.'
     }
 
-    # create the unique index
+def create_hd_dict():
 
-def create_hd():
-    pass
+    return {
+        'name': 'HD',
+        'catalog full name': 'Henry Draper Catalogue and Extension (Cannon+ 1918-1924; ADC 1989)',
+        'catalog author': 'Cannon A.J., Pickering E.C.'
+    }
 
 if __name__ == '__main__':
     do_catalogs()
