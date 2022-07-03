@@ -1,10 +1,18 @@
-from tracemalloc import start
-from neo4j_connection import Neo4jConnection
 import configparser
 import pandas as pd
-from util import get_greek_letter, get_constellation, DMS2deg
 from typing import Dict
 import time
+import os, sys, inspect
+
+# python rediculousness
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
+from neo4j_connection import Neo4jConnection
+from util import get_greek_letter, get_constellation, DMS2deg
+from config.config import URI, USER, PASSWORD
+
 
 
 EXTERNAL_FILE = "http://pbarbier.com/flamsteed/flamsteed_l.dat"
@@ -12,25 +20,9 @@ EXTERNAL_FILE = "http://pbarbier.com/flamsteed/flamsteed_l.dat"
 COLUMN_NAMES = ["FNo", "FCon", "FNum","BCon","BLet","BInd","Mag", "AR_d","AR_m","AR_s","DP_d","DP_m","DP_s"]
 COLSPECS = [(0,4),(5,8),(9,12),(34,37),(38,41),(42,43),(100,103),(44,47),(48,50),(51,53),(54,57),(58,60),(61,63)]
 
-DRY_RUN: bool = False
-
-URI = None
-USER = None
-PASSWORD = None
-
 def do_flamsteed():
 
     start_time = time.time()
-    config = configparser.ConfigParser()
-    config.read('app.properties')
-
-    if config == None:
-        print("No config found")
-        quit()
-
-    URI = config['Database']['uri']
-    USER = config['Database']['user']
-    PASSWORD = config['Database']['password']
 
     import_entries(file_location='http://pbarbier.com/flamsteed/flamsteed_l.dat', uri= URI, user = USER, password = PASSWORD)
 
