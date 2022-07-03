@@ -1,6 +1,4 @@
 from typing import Dict
-from neo4j_connection import Neo4jConnection
-from util import DMS2deg, HMS2deg
 import time
 import pandas as pd
 import configparser
@@ -8,8 +6,17 @@ from math import modf, floor
 import astropy
 from astropy.coordinates import SkyCoord
 from astropy import units as u
-import re
 import numpy as np
+import os, sys, inspect
+
+# python rediculousness
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
+from neo4j_connection import Neo4jConnection
+from util import get_greek_letter, get_constellation, DMS2deg
+from config.config import URI, USER, PASSWORD
 
 CATALOG_NAME = 'HD'
 CATALOG_FULL_NAME = 'Henry Draper Catalogue and Extension 1 (HD,HDE)'
@@ -21,18 +28,7 @@ COLSPECS = [(0,6),(6,18),(18,20),(20,23),(23,24),(24,26),(26,28),(29,34),(36,41)
 def do_hd():
     start_time = time.time()
 
-    config = configparser.ConfigParser()
-    config.read('app.properties')
-
-    if config == None:
-        print("No config found")
-        quit()
-
-    uri = config['Database']['uri']
-    user = config['Database']['user']
-    password = config['Database']['password']
-
-    import_entries(uri, user, password, 'https://cdsarc.cds.unistra.fr/ftp/III/135A/catalog.dat.gz')
+    import_entries(URI, USER, PASSWORD, 'https://cdsarc.cds.unistra.fr/ftp/III/135A/catalog.dat.gz')
     end_time = time.time()
     total_time = round(end_time - start_time,3)
     print("HD: catalog imported in {} seconds".format(round(total_time, 3)))
@@ -76,7 +72,7 @@ def convert_row_to_dict(row) -> Dict:
 
     result = {
         'catalog': 'HD',
-        'name': "HD " + row.HD,
+        'name': "HD " + str(row.HD),
         'number':row.HD,
         'dm': row.DM,
         'ra': ra,
