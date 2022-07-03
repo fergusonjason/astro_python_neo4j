@@ -1,15 +1,19 @@
 
-from catalogs.flamsteed import COLSPECS
-from neo4j_connection import Neo4jConnection
-from typing import List
-from typing import Tuple
-from typing import Dict
-from typing import Any
-from util import DMS2deg, HMS2deg
+from typing import List, Tuple, Dict, Any
 import time
 import pandas as pd
 import configparser
 import numpy as np
+import os, sys, inspect
+
+# python rediculousness
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
+from neo4j_connection import Neo4jConnection
+from util import DMS2deg, HMS2deg
+from config.config import URI, USER, PASSWORD
 
 COLUMN_NAMES: List[str] = ['Name','Comp','RAh','RAm', 'RAs','DE_','DEd','DEm','pm','pmPA','RV','Sp','VMag','BV','UB','RI','trplx','e_trplx','plx','e_plx','Mv','HD','DM','Giclas','LHS','OtherName']
 COLSPECS: List[Tuple[int,int]] = [(0,8),(8,10),(12,14),(15,17),(18,20),(21,22),(22,24),(25,29),(30,36),(37,42),(43,49),(54,66),(67,73),(75,80),(82,87),(89,94),
@@ -89,18 +93,7 @@ def convert_row_to_dict(row) -> Dict[str, Any]:
 def do_gliese():
     start_time = time.time()
 
-    config = configparser.ConfigParser()
-    config.read('app.properties')
-
-    if config == None:
-        print("No config found")
-        quit()
-
-    uri = config['Database']['uri']
-    user = config['Database']['user']
-    password = config['Database']['password']
-
-    import_entries(uri, user, password, 'https://cdsarc.cds.unistra.fr/ftp/V/70A/catalog.dat.gz')
+    import_entries(URI, USER, PASSWORD, 'https://cdsarc.cds.unistra.fr/ftp/V/70A/catalog.dat.gz')
     end_time = time.time()
     total_time = round(end_time - start_time,3)
     print("Gliese: catalog imported in {} seconds".format(total_time))
