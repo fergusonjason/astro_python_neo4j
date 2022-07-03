@@ -2,6 +2,7 @@
 import time
 from typing import Dict
 import os, sys, inspect
+from urllib.parse import ParseResultBytes
 
 # python rediculousness
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -11,18 +12,22 @@ sys.path.insert(0, parent_dir)
 from neo4j_connection import Neo4jConnection
 from config.config import URI, USER, PASSWORD
 
-def do_catalogs():
+def do_catalogs(catalog_functions):
 
     start_time = time.time()
     print('Creating catalogs')
 
+    catalogs = []
+    for f in catalog_functions:
+        catalogs.append(f())
+        pass
 
     # create individual catalogs
     # TODO: convert this to calling a List of functions
-    catalogs = []
-    catalogs.append(create_gliese_dict())
-    catalogs.append(create_flamsteed_dict())
-    catalogs.append(create_hd_dict())
+    # catalogs = []
+    # catalogs.append(create_gliese_dict())
+    # catalogs.append(create_flamsteed_dict())
+    # catalogs.append(create_hd_dict())
 
     # write catalog nodes
     query_string = "WITH $catalogs as catalogs " \
@@ -74,6 +79,26 @@ def create_hd_dict():
         'location': 'https://cdsarc.cds.unistra.fr/ftp/III/135A/catalog.dat.gz'
     }
 
+def create_hipparcos_dict():
+
+    return {
+        'name': 'Hipparcos',
+        'catalog full name': '',
+        'location': 'https://cdsarc.cds.unistra.fr/ftp/I/239/hip_main.dat'
+    }
+
+def create_hr():
+
+    return {
+        'name':'HR',
+        'catalog full name':'Bright Star Catalogue, 5th Revised Ed.',
+        'location':'https://cdsarc.cds.unistra.fr/ftp/V/50/catalog.gz'
+    }
+
+catalogs_to_import = [create_flamsteed_dict, create_gliese_dict, create_hd_dict, create_hipparcos_dict, create_hr]
+
 if __name__ == '__main__':
-    do_catalogs()
+
+    # catalogs_to_import = [create_flamsteed_dict, create_gliese_dict, create_hd_dict, create_hipparcos_dict]
+    do_catalogs(catalogs_to_import)
 
