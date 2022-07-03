@@ -1,12 +1,6 @@
-from init import do_init
-from catalogs import do_catalogs
-from catalogs.flamsteed import do_flamsteed
-from catalogs.gliese import do_gliese
-from catalogs.hd import do_hd
-# from config.config import URI, USER, PASSWORD
-# from neo4j_connection import Neo4jConnection
-from time import time
+import time
 import os, sys, inspect
+
 
 # python rediculousness
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -15,6 +9,10 @@ sys.path.insert(0, parent_dir)
 
 from config.config import URI, USER, PASSWORD
 from neo4j_connection import Neo4jConnection
+from catalogs.catalogs import do_catalogs
+from catalogs.flamsteed import do_flamsteed
+from catalogs.gliese import do_gliese
+from catalogs.hd import do_hd
 
 
 def do_init():
@@ -55,4 +53,4 @@ if __name__ == "__main__":
     do_catalogs()
     # do_flamsteed()
     # do_gliese()
-    # do_hd()
+    do_hd()
