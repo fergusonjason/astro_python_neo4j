@@ -1,6 +1,6 @@
 import configparser
 import time
-from neo4j_connection import Neo4jConnection
+from catalogs.neo4j_connection.neo4j_connection import Neo4jConnection
 
 
 def do_spectral_types():
