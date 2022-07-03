@@ -61,7 +61,8 @@ def create_gliese_dict() -> Dict[str, str]:
     return {
         'name': 'Gliese',
         'catalog full name': 'Preliminary Version of the Third Catalogue of Nearby Stars',
-        'catalog author': 'Gliese W., Jahreiss H.'
+        'catalog author': 'Gliese W., Jahreiss H.',
+        'location': 'https://cdsarc.cds.unistra.fr/ftp/V/70A/catalog.dat.gz'
     }
 
 def create_hd_dict():
@@ -69,7 +70,8 @@ def create_hd_dict():
     return {
         'name': 'HD',
         'catalog full name': 'Henry Draper Catalogue and Extension (Cannon+ 1918-1924; ADC 1989)',
-        'catalog author': 'Cannon A.J., Pickering E.C.'
+        'catalog author': 'Cannon A.J., Pickering E.C.',
+        'location': 'https://cdsarc.cds.unistra.fr/ftp/III/135A/catalog.dat.gz'
     }
 
 if __name__ == '__main__':
