@@ -1,17 +1,20 @@
 from typing import Dict
 from typing import Tuple
 from typing import Union
+import re
 
 # utilities for all imports
 
 __GREEK_LETTERS: Dict = {
     "alp": "Alpha",
+    "alf": "Alpha",
     "bet": "Beta",
     "gam": "Gamma",
     "del": "Delta",
     "eps": "Epsilson",
     "zet": "Zeta",
     "e": "Eta",
+    "eta": "Eta",
     "the": "Theta",
     "iot": "Iota",
     "kap": "Kappa",
@@ -89,10 +92,28 @@ __CONSTELLATIONS: Dict = {
     "cep": "Cephei"
 }
 
+__SUPERSCRIPTS = ["⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹"]
+
+greek_letter_regex = "([A-Za-z]+)([0-9]{1,2})?"
+pattern = re.compile(greek_letter_regex)
+
 def get_greek_letter(abbrv: str):
     if abbrv == None:
         return None
-    return __GREEK_LETTERS.get(abbrv.lower())
+
+    if __GREEK_LETTERS.get(abbrv.lower) != None:
+        return __GREEK_LETTERS.get(abbrv.lower)
+
+    match = pattern.match(abbrv)
+
+    letter = __GREEK_LETTERS.get(match.group(1))
+    sub = ""
+    if match.group(2) != None:
+        sub = int(match.group(2))
+        sub = __SUPERSCRIPTS[sub]
+
+    # sub = int(match.group(2)) if match.group(2) != None else ""
+    return letter + sub
 
 def get_constellation(const: str):
     if const == None:
