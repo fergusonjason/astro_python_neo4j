@@ -95,7 +95,15 @@ def create_hr():
         'location':'https://cdsarc.cds.unistra.fr/ftp/V/50/catalog.gz'
     }
 
-catalogs_to_import = [create_flamsteed_dict, create_gliese_dict, create_hd_dict, create_hipparcos_dict, create_hr]
+def create_common_names():
+
+    return {
+        'name':'Common Names',
+        'catalog full name': '',
+        'location':'https://raw.githubusercontent.com/mirandadam/iau-starnames/master/catalog_data/IAU-CSN.txt'
+    }
+
+catalogs_to_import = [create_flamsteed_dict, create_gliese_dict, create_hd_dict, create_hipparcos_dict, create_hr, create_common_names]
 
 if __name__ == '__main__':
 
