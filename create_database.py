@@ -15,6 +15,7 @@ from catalogs.gliese import do_gliese
 from catalogs.hd import do_hd
 from catalogs.hipparcos import do_hipparcos
 from catalogs.hr import do_hr
+from catalogs.common_names import do_common
 
 
 def do_init():
