@@ -71,7 +71,6 @@ def import_entries(uri: str, user:str, password:str, file_location: str):
                 "CREATE (s) - [ce:CATALOG_ENTRY] -> (c) " \
                 "RETURN ce"
             response = conn.query(query_string, parameters={'idlist': id_list})
-    pass
 
 def convert_row_to_dict(row) -> Dict[str, Any]:
 
