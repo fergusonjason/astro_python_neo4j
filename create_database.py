@@ -16,6 +16,7 @@ from catalogs.hd import do_hd
 from catalogs.hipparcos import do_hipparcos
 from catalogs.hr import do_hr
 from catalogs.common_names import do_common
+from catalogs.sao import do_sao
 
 
 def do_init():
@@ -59,3 +60,5 @@ if __name__ == "__main__":
     # do_hd()
     # do_hipparcos()
     # do_hr()
+    # do_common()
+    # do_sao()
