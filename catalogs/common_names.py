@@ -24,7 +24,7 @@ def do_common():
     import_entries(URI, USER, PASSWORD, 'https://raw.githubusercontent.com/mirandadam/iau-starnames/master/catalog_data/IAU-CSN.txt')
     end_time = time.time()
     total_time = round(end_time - start_time,3)
-    print("HR: catalog imported in {} seconds".format(total_time))
+    print("Common names: catalog imported in {} seconds".format(total_time))
 
 def import_entries(uri: str, user:str, password:str, file_location: str):
     print("Common names: importing entries")
@@ -34,7 +34,7 @@ def import_entries(uri: str, user:str, password:str, file_location: str):
         urlretrieve(url=file_location, filename="/tmp/common_catalog.txt")[0]
         print("Common names: Catalog downloaded")
     else:
-        print("Common names: found cached hr_catalog.gz")
+        print("Common names: found cached common_catalog.gz")
 
     for chunk in pd.read_fwf('/tmp/common_catalog.txt', chunksize = 1000, colspecs=COLSPECS, names=COLUMN_NAMES, skiprows=20, nrows=449):
 
@@ -42,26 +42,25 @@ def import_entries(uri: str, user:str, password:str, file_location: str):
         for row in chunk.itertuples():
             batch.append(convert_row_to_dict(row))
 
-        print(batch)
-        # query_string = "WITH $batch as batch " \
-        #     "UNWIND batch as item " \
-        #     "CREATE (s:star) SET s+= item " \
-        #     "RETURN id(s) as id"
-        # conn = Neo4jConnection(uri, user, password)
-        # response = conn.query(query_string, parameters={'batch':batch})
+        query_string = "WITH $batch as batch " \
+            "UNWIND batch as item " \
+            "CREATE (s:star) SET s+= item " \
+            "RETURN id(s) as id"
+        conn = Neo4jConnection(uri, user, password)
+        response = conn.query(query_string, parameters={'batch':batch})
 
-        # if response != None and response[0] != None:
-        #     id_list = []
-        #     for record in response:
-        #         id_list.append(record.get('id'))
+        if response != None and response[0] != None:
+            id_list = []
+            for record in response:
+                id_list.append(record.get('id'))
 
-        #     query_string = "WITH $idlist as id_list " \
-        #         "UNWIND id_list as item " \
-        #         "MATCH (c:CATALOG), (s:STAR) " \
-        #         "WHERE c.name = 'Common Names' and id(s) = item " \
-        #         "CREATE (s) - [ce:CATALOG_ENTRY] -> (c) " \
-        #         "RETURN ce"
-        #     response = conn.query(query_string, parameters={'idlist': id_list})
+            query_string = "WITH $idlist as id_list " \
+                "UNWIND id_list as item " \
+                "MATCH (c:CATALOG), (s:STAR) " \
+                "WHERE c.name = 'Common Names' and id(s) = item " \
+                "CREATE (s) - [ce:CATALOG_ENTRY] -> (c) " \
+                "RETURN ce"
+            response = conn.query(query_string, parameters={'idlist': id_list})
 
 def convert_row_to_dict(row) -> Dict[str, Any]:
 
