@@ -103,7 +103,15 @@ def create_common_names():
         'location':'https://raw.githubusercontent.com/mirandadam/iau-starnames/master/catalog_data/IAU-CSN.txt'
     }
 
-catalogs_to_import = [create_flamsteed_dict, create_gliese_dict, create_hd_dict, create_hipparcos_dict, create_hr, create_common_names]
+def create_sao():
+
+    return {
+        'name':'SAO',
+        'catalog full name': 'Smithsonian Astrophysical Observatory Star Catalog,  version 1989',
+        'location': 'https://cdsarc.cds.unistra.fr/ftp/I/131A/sao.dat.gz'
+    }
+
+catalogs_to_import = [create_flamsteed_dict, create_gliese_dict, create_hd_dict, create_hipparcos_dict, create_hr, create_common_names, create_sao]
 
 if __name__ == '__main__':
 
