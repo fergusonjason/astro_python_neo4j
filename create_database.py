@@ -17,14 +17,15 @@ from catalogs.hipparcos import do_hipparcos
 from catalogs.hr import do_hr
 from catalogs.common_names import do_common
 from catalogs.sao import do_sao
+from spectral_types import do_spectral_types
 
 
 def do_init():
 
     start_time = time.time()
 
-    conn = Neo4jConnection(URI, USER, PASSWORD)
     query_string = "MATCH (n) DETACH DELETE n"
+    conn = Neo4jConnection(URI, USER, PASSWORD)
     response = conn.query(query_string)
     conn.close()
 
@@ -54,6 +55,7 @@ def do_init():
 
 if __name__ == "__main__":
     do_init()
+    do_spectral_types()
     do_catalogs(catalogs_to_import)
     # do_flamsteed()
     # do_gliese()
