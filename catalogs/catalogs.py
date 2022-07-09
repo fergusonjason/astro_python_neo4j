@@ -17,6 +17,10 @@ def do_catalogs(catalog_functions):
     start_time = time.time()
     print('Creating catalogs')
 
+    # URI = config['Database']['uri']
+    # USER = config['Database']['user']
+    # PASSWORD = config['Database']['password']
+
     catalogs = []
     for f in catalog_functions:
         catalogs.append(f())
@@ -39,15 +43,15 @@ def do_catalogs(catalog_functions):
     conn.close()
 
     # create unique constraint on catalog name, don't need an index apparently
-    query_string = "CREATE CONSTRAINT catalog_name_unique IF NOT EXISTS FOR (catalog:CATALOG) REQUIRE catalog.name IS UNIQUE";
-    conn = Neo4jConnection(db_uri=URI, user=USER, password=PASSWORD)
-    conn.query(query=query_string, parameters={'catalogs': catalogs})
-    conn.close()
+    # query_string = "CREATE CONSTRAINT catalog_name_unique IF NOT EXISTS FOR (catalog:CATALOG) REQUIRE catalog.name IS UNIQUE";
+    # conn = Neo4jConnection(db_uri=URI, user=USER, password=PASSWORD)
+    # conn.query(query=query_string, parameters={'catalogs': catalogs})
+    # conn.close()
 
     # create index on name
-    # query_string = "CREATE INDEX catalog_name_idx IF NOT EXISTS FOR (catalog:CATALOG) ON (catalog.name)"
-    # conn = Neo4jConnection(db_uri=URI, user=USER, password=PASSWORD)
-    # conn.query(query_string)
+    query_string = "CREATE INDEX catalog_name_idx IF NOT EXISTS FOR (catalog:CATALOG) ON (catalog.name)"
+    conn = Neo4jConnection(db_uri=URI, user=USER, password=PASSWORD)
+    conn.query(query_string)
 
     end_time = time.time()
     total_time = end_time - start_time

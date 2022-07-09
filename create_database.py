@@ -10,15 +10,14 @@ sys.path.insert(0, parent_dir)
 from config.config import URI, USER, PASSWORD
 from neo4j_connection import Neo4jConnection
 from catalogs.catalogs import do_catalogs, catalogs_to_import
-from catalogs.flamsteed import do_flamsteed
-from catalogs.gliese import do_gliese
-from catalogs.hd import do_hd
-from catalogs.hipparcos import do_hipparcos
-from catalogs.hr import do_hr
-from catalogs.common_names import do_common
-from catalogs.sao import do_sao
-from spectral_types import do_spectral_types
-
+# from catalogs.flamsteed import do_flamsteed
+# from catalogs.gliese import do_gliese
+# from catalogs.hd import do_hd
+# from catalogs.hipparcos import do_hipparcos
+# from catalogs.hr import do_hr
+# from catalogs.common_names import do_common
+# from catalogs.sao import do_sao
+# from spectral_types import do_spectral_types
 
 def do_init():
 
@@ -55,7 +54,7 @@ def do_init():
 
 if __name__ == "__main__":
     do_init()
-    do_spectral_types()
+    # do_spectral_types()
     do_catalogs(catalogs_to_import)
     # do_flamsteed()
     # do_gliese()
